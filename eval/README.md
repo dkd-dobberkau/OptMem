@@ -62,6 +62,30 @@ compressor clearly helps, mostly in the middle levels. All 5 trivia notes were
 dropped at every level, and the correction survived. Nothing in the fixture
 reaches the 256:1 range the README plans for large logs.
 
+**The compressor matters a lot.** A second run with `--compressor 'claude -p'`
+on another machine (model and settings not recorded) kept only 12/28 at block
+size 2, 5/28 at 4 and 0/28 from 16 up, with the same prompt. That is far
+below the table above and below the truncation baseline at the upper levels,
+so treat both as "this setup" and never as "the tool". Before comparing
+anything, find out why a result is low (next section).
+
+## When the numbers look wrong
+
+Read the "example summaries" at the end of the report first. Then check:
+
+- **Several lines per response.** If the report warns about it, the compressor
+  adds a preamble or a trailing note, and the wrong line may have been taken as
+  the summary. Look at the `raw` entries in the `--json` file, and try
+  `--pick longest` (or `first`).
+- **Errors that look like answers.** CLIs sometimes print rate-limit or auth
+  messages on stdout with exit code 0; they would be stored as summaries.
+- **An agent instead of a bare model.** Tools like `claude -p` run a full
+  coding agent: it may load project files (`CLAUDE.md`, memory) or use tools,
+  which changes what comes back. Prefer a setup without tools and project
+  context (see the CLI's help for the flags), or call the API directly with a
+  small script that reads the prompt on stdin.
+- **A failing compressor** aborts the run and prints its stderr and stdout.
+
 ## Limits
 
 One fixture, one language, notes written by a model, regex-based scoring. Good

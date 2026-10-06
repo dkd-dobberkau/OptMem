@@ -106,33 +106,51 @@ def fake_compressor(prompt):
 
 
 def command_compressor(cmd):
+    """The raw stdout of the command; picking the line happens in compress()."""
     def run(prompt):
         r = subprocess.run(cmd, shell=True, input=prompt, capture_output=True,
                            text=True, timeout=600)
         if r.returncode:
-            raise RuntimeError("compressor exited %d: %s"
-                               % (r.returncode, r.stderr.strip()[:300]))
-        lines = [l.strip() for l in r.stdout.splitlines() if l.strip()]
-        if not lines:
+            # CLIs often report errors (rate limit, auth) on stdout, not stderr
+            raise RuntimeError("compressor exited %d\n  stderr: %s\n  stdout: %s" % (
+                r.returncode, r.stderr.strip()[:300] or "(empty)",
+                r.stdout.strip()[:300] or "(empty)"))
+        if not r.stdout.strip():
             raise RuntimeError("compressor printed nothing")
-        return lines[-1]  # several lines: the answer is the last one
+        return r.stdout
     return run
 
 
-def compress(fn, prompt, limit, retry=True):
+def pick_line(raw, how="last"):
+    """The summary is one line of the response (default: the last non-empty
+    one). Also report how many lines there were, because a preamble or a
+    trailing note means the compressor is not answering with just the line;
+    `--pick longest` is the fix for a trailing note."""
+    lines = [l.strip() for l in raw.splitlines() if l.strip()]
+    if not lines:
+        return "", 0
+    line = {"last": lines[-1], "first": lines[0], "longest": max(lines, key=len)}[how]
+    return " ".join(line.split()), len(lines)
+
+
+def compress(fn, prompt, limit, retry=True, how="last"):
     """One block, as an agent would: a too-long line gets one retry, like the
-    tool's own 'Too long' error would trigger. Returns (line, retried, cut)."""
-    line = " ".join(fn(prompt).split())
-    retried = cut_ = False
+    tool's own 'Too long' error would trigger."""
+    raw = fn(prompt)
+    line, nlines = pick_line(raw, how)
+    res = {"raw": raw, "multiline": nlines > 1, "retried": False, "cut": False}
     if retry and len(line.encode()) > limit:
-        retried = True
-        n = len(line.encode())
-        line = " ".join(fn("%s\n\nYour last line was %d bytes. The limit is %d "
-                           "bytes. Compress it further." % (prompt, n, limit)).split())
+        res["retried"] = True
+        raw2 = fn("%s\n\nYour last line was %d bytes. The limit is %d bytes. "
+                  "Compress it further." % (prompt, len(line.encode()), limit))
+        line, n2 = pick_line(raw2, how)
+        res["raw_retry"] = raw2
+        res["multiline"] = res["multiline"] or n2 > 1
     if len(line.encode()) > limit:
-        cut_ = True
+        res["cut"] = True
         line = cut(line, limit)
-    return line, retried, cut_
+    res["line"] = line
+    return res
 
 
 def build_prompt(d, lo, hi, instruction):
@@ -144,8 +162,9 @@ def build_prompt(d, lo, hi, instruction):
     return "\n".join(lines).strip()
 
 
-def build_tree(d, n, fn, instruction, jobs, show_prompt, retry=True):
-    stats = {"calls": 0, "retried": 0, "truncated": 0}
+def build_tree(d, n, fn, instruction, jobs, show_prompt, retry=True, how="last"):
+    stats = {"calls": 0, "retried": 0, "truncated": 0, "multiline": 0}
+    raws = {}  # block id -> what the compressor actually printed
     size = 2
     while size <= n:
         blocks = [(lo, lo + size) for lo in range(0, n - n % size, size)]
@@ -155,17 +174,20 @@ def build_tree(d, n, fn, instruction, jobs, show_prompt, retry=True):
                   % (blocks[0][0], blocks[0][1] - 1, prompts[0]))
         with cf.ThreadPoolExecutor(jobs) as ex:
             results = list(ex.map(
-                lambda p: compress(fn, p, cli.ENTRY_CHARS, retry), prompts))
-        for (lo, hi), (line, retried, cut_) in zip(blocks, results):
-            ok, err = quiet_check(line)
+                lambda p: compress(fn, p, cli.ENTRY_CHARS, retry, how), prompts))
+        for (lo, hi), res in zip(blocks, results):
+            ok, err = quiet_check(res["line"])
             if err:
-                sys.exit("block %d-%d: %s" % (lo, hi - 1, err))
+                sys.exit("block %d-%d: %s\n  raw response: %r"
+                         % (lo, hi - 1, err, res["raw"][:300]))
             assert cli.tree_put(d, lo, hi, ok)
-            stats["calls"] += 1 + retried
-            stats["retried"] += retried
-            stats["truncated"] += cut_
+            stats["calls"] += 1 + res["retried"]
+            stats["retried"] += res["retried"]
+            stats["truncated"] += res["cut"]
+            stats["multiline"] += res["multiline"]
+            raws["%d-%d" % (lo, hi - 1)] = {k: res[k] for k in ("raw", "raw_retry") if k in res}
         size *= 2
-    return stats
+    return stats, raws
 
 
 # ---------------------------------------------------------------- evaluation
@@ -228,11 +250,17 @@ def evaluate(d, n, spec, widths):
     return res
 
 
-def report(res, meta):
+def report(res, meta, summaries):
     print("compressor: %s | prompt: %s | memories: %d" % (meta["compressor"], meta["variant"], meta["n"]))
     st = meta["stats"]
-    print("compressions: %d calls, %d retried (too long), %d hard-truncated\n"
+    print("compressions: %d calls, %d retried (too long), %d hard-truncated"
           % (st["calls"], st["retried"], st["truncated"]))
+    if st["multiline"]:
+        print("WARNING: %d responses had several lines (the %s one was used). The "
+              "compressor is not answering with just the line;\n"
+              "         check the \"raw\" entries in the --json file, or change --pick."
+              % (st["multiline"], meta["pick"]))
+    print()
     print("%-8s %-14s %-9s %s" % ("block", "facts kept", "avg bytes", "compression"))
     for l in res["levels"]:
         print("%-8s %2d/%d (%3.0f%%)   %-9d %.1f:1" % (
@@ -252,6 +280,13 @@ def report(res, meta):
     if c:
         print("\ncorrection check (block %d covering old and new value): keeps new=%s, still shows old=%s"
               % (c["size"], c["has_new"], c["has_old"]))
+    print("\nexample summaries (look at these before trusting the numbers):")
+    n, size = meta["n"], 2
+    while size <= n:
+        key = "0-%d" % (size - 1)
+        if key in summaries and size in (2, 8, 32, 128, 512) or size * 2 > n:
+            print("  #%s [%d bytes] %s" % (key, len(summaries[key].encode()), summaries[key]))
+        size *= 2
 
 
 def main():
@@ -263,6 +298,8 @@ def main():
     ap.add_argument("--variant", choices=sorted(VARIANTS), default="current",
                     help="instruction line in the nap prompt (default: whatever memo prints)")
     ap.add_argument("--instruction", help="custom instruction line, overrides --variant")
+    ap.add_argument("--pick", choices=("last", "first", "longest"), default="last",
+                    help="which line of a multi-line response is the summary (default: last)")
     ap.add_argument("--fixture", default="falkenstein")
     ap.add_argument("--jobs", type=int, default=4, help="parallel compressions per level")
     ap.add_argument("--widths", default="48,32,24,16,12,8",
@@ -279,23 +316,23 @@ def main():
     try:
         fn = fake_compressor if a.fake else command_compressor(a.compressor)
         try:
-            stats = build_tree(d, n, fn, instruction, a.jobs, a.show_prompt,
-                               retry=not a.fake)
+            stats, raws = build_tree(d, n, fn, instruction, a.jobs, a.show_prompt,
+                                     retry=not a.fake, how=a.pick)
         except (RuntimeError, subprocess.SubprocessError) as e:
             sys.exit("compressor failed: %s" % e)
         res = evaluate(d, n, spec, [int(x) for x in a.widths.split(",") if x])
+        summaries = {}
+        s = 2
+        while s <= n:
+            for lo in range(0, n - n % s, s):
+                summaries["%d-%d" % (lo, lo + s - 1)] = cli.tree_get(d, lo, lo + s)
+            s *= 2
         meta = {"compressor": "fake (truncation)" if a.fake else a.compressor,
                 "variant": "custom" if a.instruction else a.variant, "n": n,
-                "fixture": a.fixture, "stats": stats}
-        report(res, meta)
+                "fixture": a.fixture, "pick": a.pick, "stats": stats}
+        report(res, meta, summaries)
         if a.json:
-            summaries = {}
-            s = 2
-            while s <= n:
-                for lo in range(0, n - n % s, s):
-                    summaries["%d-%d" % (lo, lo + s - 1)] = cli.tree_get(d, lo, lo + s)
-                s *= 2
-            json.dump({"meta": meta, "result": res, "summaries": summaries},
+            json.dump({"meta": meta, "result": res, "summaries": summaries, "raw": raws},
                       open(a.json, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
             print("\nwrote " + a.json)
         if a.keep:
