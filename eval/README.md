@@ -77,27 +77,36 @@ reaches the 256:1 range the README plans for large logs.
 
 ### Prompt A/B with the API compressor
 
-`eval/compressors/anthropic_api.py`, `claude-sonnet-5-5`, 2026-10-06, two runs
-per variant. Facts kept out of 28 (run 1 / run 2):
+`eval/compressors/anthropic_api.py`, `claude-sonnet-5-5`, 2026-10-06. Facts kept
+out of 28, one number per run (`state` ran twice, the others three times):
 
-| block | `current` | `strict` |
-|---|---|---|
-| 2 | 28 / 28 | 28 / 27 |
-| 4 | 26 / 26 | 26 / 26 |
-| 8 | 22 / 21 | 26 / 27 |
-| 16 | 16 / 18 | 19 / 20 |
-| 32 | 9 / 11 | 11 / 14 |
-| 64 | 4 / 6 | 8 / 10 |
-| wake, 16 lines | 19 / 20 | 23 / 25 |
-| wake, 8 lines | 14 / 15 | 16 / 21 |
+| block | `current` | `strict` | `state` |
+|---|---|---|---|
+| 2 | 28 28 28 | 28 27 28 | 28 28 |
+| 4 | 26 26 25 | 26 26 26 | 26 27 |
+| 8 | 22 21 20 | 26 27 26 | 25 24 |
+| 16 | 16 18 17 | 19 20 19 | 18 20 |
+| 32 | 9 11 11 | 11 14 9 | 13 10 |
+| 64 | 4 6 8 | 8 10 7 | 7 7 |
+| wake, 16 lines | 19 20 21 | 23 25 23 | 20 22 |
+| wake, 8 lines | 14 15 14 | 16 21 17 | 17 15 |
 
-Identical runs differ by up to 2 facts, so differences of 1-3 are noise. At
-blocks 8, 16 and 64 the two variants do not overlap: `strict` keeps about 3-5
-more details. The price: `strict` drops less trivia at the low levels (all 5
-noise notes still present at blocks 2 and 4, 2-3 at block 8, none from 32 up;
-`current` drops nearly all of them from block 8) and writes telegraphic
-summaries ("Mollie>PayPal", "Konten 41.000→31.700"). Both keep the correction
-at the root. Two runs, one fixture, one model: a lead, not a result.
+Identical runs differ by up to 2-4 facts. What holds up: at blocks 8 and 16
+and in the 16-line wake view, `strict` keeps about 3-6 more details than
+`current`, and no run of one variant reaches a run of the other. At blocks 32
+and 64 the ranges overlap, so there is no established difference. The price:
+`strict` drops less trivia at the low levels (all 5 noise notes still present
+at blocks 2 and 4, 2-3 at block 8, none from 32 up; `current` drops most of
+them from block 4) and writes telegraphic summaries ("Mollie>PayPal",
+"Konten 41.000→31.700").
+
+`state` (`strict` plus "if something was later solved, replaced or corrected,
+give only the final state") shows no consistent gain. It kept 1-3 fewer
+details than `strict` and triggered 3-4 times as many too-long retries. The
+stale-status probe (3 pairs) showed 0-1 stale at block 64 for every variant,
+so it cannot separate them; one `state` run did write "MOL-55120 gelöst" at the
+root, the other did not. Both variants keep the correction at the root. Three
+runs, one fixture, one model: a lead, not a result.
 
 **The compressor matters a lot, and a bad one invalidates the run.** Two runs
 with `--compressor 'claude -p'` on another machine kept only 12-15/28 at block
