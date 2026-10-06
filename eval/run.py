@@ -34,6 +34,7 @@ ROOT = os.path.dirname(HERE)
 
 
 def load_memo():
+    sys.dont_write_bytecode = True  # loading `memo` would drop a __pycache__ into the repo
     loader = SourceFileLoader("memo_cli", os.path.join(ROOT, "memo"))
     spec = importlib.util.spec_from_loader("memo_cli", loader)
     mod = importlib.util.module_from_spec(spec)
