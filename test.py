@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""OptMem invariants, checked against a synthetic life of 5000 memories.
+"""OptMem invariants, checked against a synthetic life of 2000 memories.
 
 Uses a fake compressor (join + truncate) so the run is deterministic and free.
 """
 
 import contextlib
 import datetime
+import importlib.util
 import io
 import os
 import re
@@ -17,7 +18,19 @@ from importlib.machinery import SourceFileLoader
 
 HERE = os.path.dirname(os.path.realpath(__file__))
 MEMO = os.path.join(HERE, "memo")
-cli = SourceFileLoader("memo_cli", MEMO).load_module()
+
+
+def load_memo(path):
+    """Import the extension-less `memo` script as a module. (load_module() is
+    deprecated and slated for removal in Python 3.15.)"""
+    loader = SourceFileLoader("memo_cli", path)
+    spec = importlib.util.spec_from_loader("memo_cli", loader)
+    mod = importlib.util.module_from_spec(spec)
+    loader.exec_module(mod)
+    return mod
+
+
+cli = load_memo(MEMO)
 cover = cli.cover
 
 
@@ -506,14 +519,18 @@ check(r.returncode == 1 and "forget 0-1" in r.stderr
       "a blank summary must point at forget:\n" + r.stdout + r.stderr)
 
 # an unreadable level is a filesystem failure and must surface as one --
-# reading it as "not compressed yet" offers work that cannot be done
-os.chmod(os.path.join(d3, "TREE", "2"), 0)
-r_ = subprocess.run(memo + ["wake"], capture_output=True, text=True,
-                    env=dict(os.environ, MEMORY_DIR=d3))
-check(r_.returncode == 1 and "Permission denied" in r_.stderr
-      and "not compressed" not in r_.stdout,
-      "an unreadable level was read as pending work: " + r_.stdout + r_.stderr)
-os.chmod(os.path.join(d3, "TREE", "2"), 0o644)
+# reading it as "not compressed yet" offers work that cannot be done.
+# root ignores file modes, so chmod 0 proves nothing there (e.g. in a container).
+if hasattr(os, "geteuid") and os.geteuid() == 0:
+    print("skipped: unreadable-level check (root ignores file modes)")
+else:
+    os.chmod(os.path.join(d3, "TREE", "2"), 0)
+    r_ = subprocess.run(memo + ["wake"], capture_output=True, text=True,
+                        env=dict(os.environ, MEMORY_DIR=d3))
+    check(r_.returncode == 1 and "Permission denied" in r_.stderr
+          and "not compressed" not in r_.stdout,
+          "an unreadable level was read as pending work: " + r_.stdout + r_.stderr)
+    os.chmod(os.path.join(d3, "TREE", "2"), 0o644)
 
 # an impossible calendar date would poison every later import: the store's
 # order check compares against it forever
