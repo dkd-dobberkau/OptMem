@@ -248,8 +248,22 @@ def evaluate(d, n, spec, widths):
         if s <= n and n // s * s > c["new_id"]:
             t = level_text(d, s, c["new_id"])
             res["correction"] = {"size": s, "has_new": c["new"] in t, "has_old": c["old"] in t,
-                                 "text": t}
+                                 "old_state": old_state(t, c["old"]), "text": t}
     return res
+
+
+SUPERSEDED = re.compile(r"nicht|statt|vorher|früher|bisher|ursprünglich|alt\b|verschoben|not |was |instead", re.I)
+
+
+def old_state(text, old):
+    """Is the replaced value gone, mentioned as superseded, or still shown as current?"""
+    spots = [m.start() for m in re.finditer(re.escape(old), text)]
+    if not spots:
+        return "gone"
+    for i in spots:
+        if not SUPERSEDED.search(text[max(0, i - 25):i + len(old) + 25]):
+            return "shown as current"
+    return "mentioned as superseded"
 
 
 def report(res, meta, summaries):
@@ -280,8 +294,8 @@ def report(res, meta, summaries):
     print("  " + ", ".join("%d: %d/%d" % (x["size"], x["leaked"], x["of"]) for x in res["noise"]))
     c = res.get("correction")
     if c:
-        print("\ncorrection check (block %d covering old and new value): keeps new=%s, still shows old=%s"
-              % (c["size"], c["has_new"], c["has_old"]))
+        print("\ncorrection check (block %d covering old and new value): keeps new=%s, old value: %s"
+              % (c["size"], c["has_new"], c.get("old_state", "shown" if c["has_old"] else "gone")))
     print("\nexample summaries (look at these before trusting the numbers):")
     n, size = meta["n"], 2
     while size <= n:

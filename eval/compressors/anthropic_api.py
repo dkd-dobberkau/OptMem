@@ -36,20 +36,25 @@ def main():
     client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY
     args = dict(
         model=model,
-        max_tokens=4000,  # room for hidden thinking; the summary itself is ~100 tokens
+        max_tokens=16000,  # room for hidden thinking; the summary itself is ~100 tokens
         system=SYSTEM,
         messages=[{"role": "user", "content": prompt}],
     )
-    try:
+    text = ""
+    for attempt in (1, 2):  # an empty reply (thinking only) is rare; one more try is cheap
         try:
-            msg = client.messages.create(thinking={"type": "disabled"}, **args)
-        except anthropic.BadRequestError:  # model or SDK does not take the switch
-            msg = client.messages.create(**args)
-    except Exception as e:  # one readable line instead of a traceback
-        sys.exit("API call failed (model %s): %s: %s" % (model, type(e).__name__, e))
-    text = "".join(b.text for b in msg.content if getattr(b, "type", None) == "text")
+            try:
+                msg = client.messages.create(thinking={"type": "disabled"}, **args)
+            except anthropic.BadRequestError:  # model or SDK does not take the switch
+                msg = client.messages.create(**args)
+        except Exception as e:  # one readable line instead of a traceback
+            sys.exit("API call failed (model %s): %s: %s" % (model, type(e).__name__, e))
+        text = "".join(b.text for b in msg.content if getattr(b, "type", None) == "text")
+        if text.strip():
+            break
     if not text.strip():
-        sys.exit("the model returned no text (stop_reason=%s, blocks=%s)" % (getattr(msg, "stop_reason", "?"), [getattr(b, "type", "?") for b in msg.content]))
+        sys.exit("the model returned no text twice (stop_reason=%s, blocks=%s)"
+                 % (getattr(msg, "stop_reason", "?"), [getattr(b, "type", "?") for b in msg.content]))
     print(text.strip())
 
 
