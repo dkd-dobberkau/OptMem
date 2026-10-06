@@ -31,6 +31,7 @@ counts. A line over the byte limit gets one retry, then is cut, and both are
 counted in the report, because an agent hits the same wall. `--jobs` sets how
 many blocks of one level are compressed in parallel.
 
+`--variant state` is `strict` plus "if something was later solved, replaced or corrected, give only the final state" (see *stale status* below).
 `--variant strict` swaps in the older, stricter instruction ("keep every name,
 number, date, decision and outcome"), `--instruction "..."` any text of your
 own. That is the A/B hook for prompt changes. `--json` also stores every
@@ -47,6 +48,7 @@ summary, so two runs can be diffed.
   summary can keep "Hetzner" and lose "Nürnberg".
 - **Wake view**: how many probes are readable in the `wake` document at several
   `WAKE_LINES` budgets, i.e. without `recall` or `zoom`.
+- **Stale status** (`stale` in the probes file): a problem note (Klarna ticket open, Lighthouse 72, 41.000 accounts) and the later note that resolves it. Counted as stale when a block that covers both still shows the problem but not the solution. Regex-based, so read the example summaries too.
 - **Trivia** that should be dropped, and a **correction** (old date replaced by
   a new one) that should win.
 

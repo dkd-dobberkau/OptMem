@@ -169,5 +169,28 @@
   "new_id": 32,
   "old": "15.11",
   "new": "29.11"
- }
+ },
+ "stale": [
+  {
+   "label": "Klarna ticket MOL-55120",
+   "id": 26,
+   "resolved_id": 34,
+   "problem": "MOL-55120|Klarna.{0,25}(1\\.?000|scheiter|Limit|Test)|1\\.?000 ?€?.{0,10}Klarna|Klarna ?>",
+   "resolved": "gelöst|kein Codefehler|Testkonto|resolved|behoben|Limit im"
+  },
+  {
+   "label": "Lighthouse 72 -> 88",
+   "id": 21,
+   "resolved_id": 39,
+   "problem": "(?<![\\d.,])72(?![\\d.,])",
+   "resolved": "(?<![\\d.,])88(?![\\d.,])"
+  },
+  {
+   "label": "Konten 41.000 -> 31.700",
+   "id": 6,
+   "resolved_id": 31,
+   "problem": "41\\.?000",
+   "resolved": "31\\.?700"
+  }
+ ]
 }

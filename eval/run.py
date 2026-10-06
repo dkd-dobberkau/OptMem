@@ -50,6 +50,9 @@ VARIANTS = {
     "current": None,
     "strict": "Keep every name, number, date, decision and outcome. "
               "Drop wording, not facts. Invent nothing.",
+    "state": "Keep every name, number, date, decision and outcome. Drop wording, not facts. "
+             "If something was later solved, replaced or corrected, give only the final state. "
+             "Invent nothing.",
 }
 
 
@@ -240,6 +243,17 @@ def evaluate(d, n, spec, widths):
         noise = [x for x in spec.get("noise", []) if x["id"] < reach]
         leak = sum(bool(re.search(x["regex"], level_text(d, s, x["id"]), re.I)) for x in noise)
         res["noise"].append({"size": s, "leaked": leak, "of": len(noise)})
+    res["stale"] = []
+    for s in sizes[1:]:
+        reach = n // s * s
+        pr = [x for x in spec.get("stale", []) if x["id"] // s == x["resolved_id"] // s and x["resolved_id"] < reach]
+        if not pr:
+            continue
+        stale = 0
+        for x in pr:
+            t = level_text(d, s, x["id"])
+            stale += bool(re.search(x["problem"], t, re.I)) and not re.search(x["resolved"], t, re.I)
+        res["stale"].append({"size": s, "stale": stale, "of": len(pr)})
     c = spec.get("correction")
     if c:
         s = 2
@@ -292,6 +306,9 @@ def report(res, meta, summaries):
             w["wake_lines"], w["lines"], w["sizes"], w["survived"], w["of"]))
     print("\ntrivia still present in summaries:")
     print("  " + ", ".join("%d: %d/%d" % (x["size"], x["leaked"], x["of"]) for x in res["noise"]))
+    if res.get("stale"):
+        print("\nstale status (a solved problem shown without its solution; blocks holding both notes):")
+        print("  " + ", ".join("%d: %d/%d" % (x["size"], x["stale"], x["of"]) for x in res["stale"]))
     c = res.get("correction")
     if c:
         print("\ncorrection check (block %d covering old and new value): keeps new=%s, old value: %s"
