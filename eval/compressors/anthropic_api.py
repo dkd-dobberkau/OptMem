@@ -33,19 +33,23 @@ def main():
     if not prompt.strip():
         sys.exit("empty prompt on stdin")
     model = os.environ.get("OPTMEM_EVAL_MODEL", "claude-sonnet-5-5")
+    client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY
+    args = dict(
+        model=model,
+        max_tokens=4000,  # room for hidden thinking; the summary itself is ~100 tokens
+        system=SYSTEM,
+        messages=[{"role": "user", "content": prompt}],
+    )
     try:
-        client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY
-        msg = client.messages.create(
-            model=model,
-            max_tokens=400,
-            system=SYSTEM,
-            messages=[{"role": "user", "content": prompt}],
-        )
+        try:
+            msg = client.messages.create(thinking={"type": "disabled"}, **args)
+        except anthropic.BadRequestError:  # model or SDK does not take the switch
+            msg = client.messages.create(**args)
     except Exception as e:  # one readable line instead of a traceback
         sys.exit("API call failed (model %s): %s: %s" % (model, type(e).__name__, e))
     text = "".join(b.text for b in msg.content if getattr(b, "type", None) == "text")
     if not text.strip():
-        sys.exit("the model returned no text (stop_reason=%s)" % getattr(msg, "stop_reason", "?"))
+        sys.exit("the model returned no text (stop_reason=%s, blocks=%s)" % (getattr(msg, "stop_reason", "?"), [getattr(b, "type", "?") for b in msg.content]))
     print(text.strip())
 
 
