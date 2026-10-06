@@ -1,0 +1,64 @@
+2026-08-31 Projekt Falkenstein-Relaunch gestartet: Kunde Brauerei Falkenstein, Budget 48.000 € netto, Go-live-Ziel 15.11.2026, Projektleiterin Mira Haas.
+2026-08-31 Stack entschieden: TYPO3 13 LTS fürs CMS, Shopware 6.6 für den Shop, Hosting bei Hetzner Cloud in Nürnberg.
+2026-09-01 Kunde lehnt Dark Mode ab; Primärfarbe bleibt Falkenstein-Grün #1F6B3A.
+2026-09-01 Daily jeden Tag um 9:15 Uhr im Teams-Kanal #falkenstein, Sprintlänge 2 Wochen.
+2026-09-02 Jonas Kreuz macht Backend und Shopware-Anbindung, Mira Frontend und Design-Review.
+2026-09-02 Kaffeemaschine im Büro defekt, Techniker kommt am Donnerstag.
+2026-09-03 Migration aus dem alten Magento-Shop: 3.200 Produkte und 41.000 Kundenkonten; inaktive Konten (über 3 Jahre) müssen vorher aus DSGVO-Gründen gelöscht werden.
+2026-09-03 Zahlungsanbieter: Mollie (Kreditkarte, SEPA, Klarna), kein PayPal Plus — Entscheidung des Kunden.
+2026-09-04 Mittagessen mit den Lieferanten auf Freitag verschoben.
+2026-09-04 Sprint 1 gestartet; Ziel: Produktkatalog-Import und Warenkorb, 34 Story-Points geplant.
+2026-09-05 Produktimport läuft mit 400 Produkten pro Minute; Engpass ist die Bild-Konvertierung nach WebP.
+2026-09-05 Ansprechpartner beim Kunden: Geschäftsführer Dietmar Falk, operativ Frau Svenja Roth (Durchwahl -214).
+2026-09-06 Kunde gibt die Startseite bis 26.09. frei; sonst verschiebt sich der Go-live.
+2026-09-06 Praktikant Leon beginnt am 1.10., Laptop bestellt (Bestellnummer 88421).
+2026-09-07 Bug FAL-117: Warenkorb verliert Artikel nach dem Login; Ursache Session-Merge, Fix von Jonas im Branch fix/cart-merge.
+2026-09-07 Staging unter staging.falkenstein-relaunch.example mit Basic-Auth; Zugangsdaten liegen im Passwortmanager.
+2026-09-08 Sprint-1-Review: 31 von 34 Story-Points erledigt; Gutscheincodes wandern in Sprint 2.
+2026-09-08 Sprint 2 gestartet; Ziel: Checkout mit Mollie, Gutscheine, Versandarten (DHL, Abholung in der Brauerei).
+2026-09-09 Versand: DHL-Paket 4,90 € bis 20 kg, darüber Spedition nach Gewicht; Abholung kostenlos.
+2026-09-09 Alkoholverkauf: Altersprüfung über Schufa Q-Bit nötig; Kunde trägt 0,79 € je Prüfung.
+2026-09-10 Mira sagt die Dienstreise am 24.09. ab; Design-Review läuft per Video.
+2026-09-10 Performance-Ziel: Lighthouse Mobile mindestens 85 auf Startseite und Produktseiten; aktuell 72 auf Staging.
+2026-09-11 Ursache für die schlechte Lighthouse-Note: unkomprimierte Hero-Videos (18 MB); Plan: WebM plus Poster-Bild.
+2026-09-11 Firmenlauf am Samstag wegen Regen abgesagt.
+2026-09-12 Frau Roth will Newsletter-Anmeldung im Checkout; Double-Opt-in über Brevo, nicht Mailchimp.
+2026-09-12 Rechnungsplan: 30 % bei Start (14.400 €, bezahlt am 12.09.), 40 % bei Abnahme Sprint 3, 30 % bei Go-live.
+2026-09-13 Sprint-2-Review: Checkout läuft auf Staging; Klarna-Tests über 1.000 € scheitern (Mollie-Ticket MOL-55120 offen).
+2026-09-13 Design-Review per Video: Produktkacheln gefallen, Header-Navigation zu überladen; Mira kürzt von 7 auf 5 Hauptpunkte.
+2026-09-14 Entscheidung: Suche über Apache Solr, nicht Elasticsearch; Index-Server auf Hetzner CX32.
+2026-09-14 Design-Freigabe der Startseite rechtzeitig erhalten; Go-live-Termin 15.11. bleibt.
+2026-09-15 Sprint 3 gestartet; Ziel: Suche, Gutscheine, Migration der Kundenkonten, Passwort-Reset-Mails.
+2026-09-15 Altkonten bereinigt: 9.300 inaktive Konten gelöscht, 31.700 werden migriert (vorher 41.000).
+2026-09-16 Korrektur: Go-live verschoben auf 29.11.2026, weil der Kunde die Produktfotos erst Mitte Oktober liefert (alter Termin 15.11.).
+2026-09-16 Jonas ist 3 Tage krank; Sprint-3-Ziel Suche könnte rutschen.
+2026-09-17 Mollie-Ticket MOL-55120 gelöst: Klarna-Limit im Testkonto stand auf 1.000 €, kein Codefehler.
+2026-09-17 Leon startet und bekommt die Aufgabe: Alt-Texte für 3.200 Produktbilder per KI-Vorschlag plus manuelle Kontrolle.
+2026-09-18 Entscheidung: Alt-Texte werden KI-generiert, aber jeder Text von Leon gegengelesen; keine Veröffentlichung ohne Freigabe.
+2026-09-18 Sprint-3-Review wegen Jonas' Krankheit auf den 6.10. verschoben.
+2026-09-19 Kunde: Preise im Shop brutto für Privatkunden, im B2B-Bereich netto — zwei Preislisten nötig.
+2026-09-19 Lighthouse Mobile jetzt 88 nach der Video-Optimierung (vorher 72); Ziel 85 erreicht.
+2026-09-20 Hetzner-Rechnung September: 212,40 € für Staging- und Solr-Server; wird an den Kunden weiterberechnet.
+2026-09-20 Impressum und Datenschutztexte liefert der Anwalt des Kunden, Dr. Ines Vogt, bis zum 20.10.
+2026-09-21 Backup-Konzept: tägliche Snapshots um 03:00 Uhr, 14 Tage Aufbewahrung, monatlicher Restore-Test.
+2026-09-21 SSL über Let's Encrypt, Wildcard-Zertifikat für *.falkenstein-relaunch.example.
+2026-09-22 Team-Regel: Code-Review Pflicht, ein Approval, Merge nur über Pull Request.
+2026-09-22 Parkplatz vor dem Büro wegen Baustelle bis Ende Oktober gesperrt.
+2026-09-23 Tracking: Matomo selbst gehostet, kein Google Analytics; Cookie-Banner mit zwei Stufen (notwendig, Statistik).
+2026-09-23 Mollie-Gebühren laut Angebot: Kreditkarte 1,8 % + 0,25 €, SEPA 0,35 € pro Transaktion, Klarna 2,99 %.
+2026-09-24 Kunde plant Launch-Gewinnspiel: 3 Bierpakete, Teilnahme per Newsletter-Anmeldung; rechtliche Prüfung durch Dr. Vogt nötig.
+2026-09-24 Staging-Datenbank enthält Echtdaten der Altkonten; Entscheidung: vor weiterer Arbeit anonymisieren, Skript von Jonas, Frist 10.10.
+2026-09-25 Sommerfest am 18.10. im Biergarten.
+2026-09-25 Lasttest geplant für den 5.11.: Ziel 500 gleichzeitige Nutzer, Antwortzeit unter 800 ms (p95).
+2026-09-26 Produktfotos kommen laut Kunde in drei Lieferungen: 14.10., 21.10. und 28.10.
+2026-09-26 Mira übernimmt die Abnahme-Checkliste mit 62 Punkten; Vorlage im Projektordner "Abnahme".
+2026-09-27 Sprint-3-Review am 6.10. gehalten: Suche funktioniert, Gutscheine fertig, Konten-Migration auf Staging erfolgreich.
+2026-09-27 Kunde erteilt Abnahme Sprint 3; zweite Rate (40 % = 19.200 €) fällig, Rechnung Nr. 2026-0418.
+2026-09-28 Solr-Index braucht 2,1 GB RAM bei 3.200 Produkten; der CX32 mit 8 GB reicht.
+2026-09-28 Weiterleitungen: 1.450 301-Regeln aus alten URLs, Liste von Frau Roth, Import per CSV.
+2026-09-29 Leon hat 640 von 3.200 Alt-Texten fertig; KI-Fehlerquote ca. 12 % (korrigiert).
+2026-09-29 Wartungsvertrag nach Go-live: Angebot 690 € pro Monat, Reaktionszeit 4 Stunden an Werktagen; Kunde prüft.
+2026-09-30 Neue Anforderung: Gutscheine auch als Geschenkkarten (25/50/100 €), Aufwand geschätzt 5 Personentage, extra beauftragt.
+2026-09-30 Go-live-Fenster: Sonntag 29.11., 02:00 bis 06:00 Uhr; DNS-TTL vorher auf 300 Sekunden senken.
+2026-10-01 Risiko: dritte Fotolieferung (28.10.) liegt knapp vor der Abnahme; Mira plant 5 Werktage Puffer ein.
+2026-10-01 Budgetstand: 22.100 € verbraucht (46 %), Geschenkkarten-Extras noch nicht enthalten.
