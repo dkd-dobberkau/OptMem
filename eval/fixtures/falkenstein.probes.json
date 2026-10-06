@@ -1,0 +1,196 @@
+{
+ "description": "64 German project notes (fictional agency relaunch) with trivia and one correction. Each probe is a specific detail that lives in exactly one note; the regex checks whether that detail is still readable in the summary covering the note.",
+ "probes": [
+  {
+   "id": 0,
+   "label": "Budget 48.000",
+   "regex": "48\\.?000"
+  },
+  {
+   "id": 0,
+   "label": "Projektleiterin Haas",
+   "regex": "Haas"
+  },
+  {
+   "id": 1,
+   "label": "Hosting Nuernberg",
+   "regex": "Nürnberg"
+  },
+  {
+   "id": 2,
+   "label": "Farbe #1F6B3A",
+   "regex": "1F6B3A"
+  },
+  {
+   "id": 6,
+   "label": "Magento-Altshop",
+   "regex": "Magento"
+  },
+  {
+   "id": 7,
+   "label": "kein PayPal Plus",
+   "regex": "PayPal"
+  },
+  {
+   "id": 11,
+   "label": "Ansprechpartner Dietmar/Svenja",
+   "regex": "Dietmar|Svenja"
+  },
+  {
+   "id": 13,
+   "label": "Bestellnr. 88421",
+   "regex": "88421"
+  },
+  {
+   "id": 14,
+   "label": "Bug FAL-117",
+   "regex": "FAL-117"
+  },
+  {
+   "id": 18,
+   "label": "DHL 4,90 EUR",
+   "regex": "4,90"
+  },
+  {
+   "id": 19,
+   "label": "Altersprüfung Q-Bit/0,79",
+   "regex": "Q-Bit|0,79"
+  },
+  {
+   "id": 24,
+   "label": "Newsletter via Brevo",
+   "regex": "Brevo"
+  },
+  {
+   "id": 25,
+   "label": "Rate 14.400",
+   "regex": "14\\.?400"
+  },
+  {
+   "id": 27,
+   "label": "Navigation 7 auf 5",
+   "regex": "7 auf 5|auf 5 "
+  },
+  {
+   "id": 28,
+   "label": "Solr statt Elasticsearch",
+   "regex": "Elasticsearch"
+  },
+  {
+   "id": 31,
+   "label": "9.300 Konten geloescht",
+   "regex": "9\\.?300"
+  },
+  {
+   "id": 34,
+   "label": "MOL-55120 Ursache Testkonto",
+   "regex": "Testkonto|kein Codefehler"
+  },
+  {
+   "id": 36,
+   "label": "Alt-Texte gegengelesen",
+   "regex": "gegengelesen|gegenles|gegenprüf|manuell|geprüft|Kontroll"
+  },
+  {
+   "id": 38,
+   "label": "zwei Preislisten brutto/netto",
+   "regex": "Preisliste|brutto"
+  },
+  {
+   "id": 42,
+   "label": "Backup 03:00 / 14 Tage",
+   "regex": "03:00|14 Tage|Snapshot|Restore"
+  },
+  {
+   "id": 47,
+   "label": "Mollie-Gebuehren 1,8/2,99",
+   "regex": "1,8|2,99|0,35"
+  },
+  {
+   "id": 49,
+   "label": "Staging-DB anonymisieren",
+   "regex": "anonymis"
+  },
+  {
+   "id": 51,
+   "label": "Lasttest 500 Nutzer/800 ms",
+   "regex": "500 gleich|800 ms|Lasttest"
+  },
+  {
+   "id": 55,
+   "label": "Rechnung 2026-0418 / 19.200",
+   "regex": "0418|19\\.?200"
+  },
+  {
+   "id": 59,
+   "label": "Wartungsvertrag 690",
+   "regex": "690"
+  },
+  {
+   "id": 60,
+   "label": "Geschenkkarten",
+   "regex": "Geschenkkarte"
+  },
+  {
+   "id": 61,
+   "label": "Go-live-Fenster TTL 300",
+   "regex": "TTL|02:00|Go-live-Fenster"
+  },
+  {
+   "id": 63,
+   "label": "Budgetstand 22.100/46 %",
+   "regex": "22\\.?100|46 ?%"
+  }
+ ],
+ "noise": [
+  {
+   "id": 5,
+   "regex": "Kaffee"
+  },
+  {
+   "id": 8,
+   "regex": "Mittagessen"
+  },
+  {
+   "id": 23,
+   "regex": "Firmenlauf"
+  },
+  {
+   "id": 45,
+   "regex": "Parkplatz"
+  },
+  {
+   "id": 50,
+   "regex": "Sommerfest"
+  }
+ ],
+ "correction": {
+  "old_id": 0,
+  "new_id": 32,
+  "old": "15.11",
+  "new": "29.11"
+ },
+ "stale": [
+  {
+   "label": "Klarna ticket MOL-55120",
+   "id": 26,
+   "resolved_id": 34,
+   "problem": "MOL-55120|Klarna.{0,25}(1\\.?000|scheiter|Limit|Test)|1\\.?000 ?€?.{0,10}Klarna|Klarna ?>",
+   "resolved": "gelöst|kein Codefehler|Testkonto|resolved|behoben|Limit im"
+  },
+  {
+   "label": "Lighthouse 72 -> 88",
+   "id": 21,
+   "resolved_id": 39,
+   "problem": "(?<![\\d.,])72(?![\\d.,])",
+   "resolved": "(?<![\\d.,])88(?![\\d.,])"
+  },
+  {
+   "label": "Konten 41.000 -> 31.700",
+   "id": 6,
+   "resolved_id": 31,
+   "problem": "41\\.?000",
+   "resolved": "31\\.?700"
+  }
+ ]
+}
