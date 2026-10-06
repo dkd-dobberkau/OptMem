@@ -113,9 +113,10 @@ def command_compressor(cmd):
                            text=True, timeout=600)
         if r.returncode:
             # CLIs often report errors (rate limit, auth) on stdout, not stderr
+            # the tail: in a traceback the actual error is on the last line
             raise RuntimeError("compressor exited %d\n  stderr: %s\n  stdout: %s" % (
-                r.returncode, r.stderr.strip()[:300] or "(empty)",
-                r.stdout.strip()[:300] or "(empty)"))
+                r.returncode, r.stderr.strip()[-400:] or "(empty)",
+                r.stdout.strip()[-400:] or "(empty)"))
         if not r.stdout.strip():
             raise RuntimeError("compressor printed nothing")
         return r.stdout

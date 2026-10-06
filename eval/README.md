@@ -13,6 +13,17 @@ python3 eval/run.py --compressor 'claude -p'    # any command: prompt on stdin, 
 python3 eval/run.py --compressor '...' --variant strict --json strict.json
 ```
 
+For a clean, comparable run use the bundled compressor, a bare API call with
+no agent, tools or local context (needs `pip install anthropic` and
+`ANTHROPIC_API_KEY` in the environment; the model is `OPTMEM_EVAL_MODEL`,
+default `claude-sonnet-5-5`):
+
+```sh
+python3 eval/run.py --compressor 'python3 eval/compressors/anthropic_api.py' --json current-1.json
+```
+
+It has only been tested against a stub SDK, not the live API.
+
 The compressor is any shell command. It receives the exact prompt `memo`
 would show an agent (built by `nap_prompt()`, minus the final `Run:` line) on
 stdin and prints the summary line. If it prints several lines, the last one
@@ -62,12 +73,14 @@ compressor clearly helps, mostly in the middle levels. All 5 trivia notes were
 dropped at every level, and the correction survived. Nothing in the fixture
 reaches the 256:1 range the README plans for large logs.
 
-**The compressor matters a lot.** A second run with `--compressor 'claude -p'`
-on another machine (model and settings not recorded) kept only 12/28 at block
-size 2, 5/28 at 4 and 0/28 from 16 up, with the same prompt. That is far
-below the table above and below the truncation baseline at the upper levels,
-so treat both as "this setup" and never as "the tool". Before comparing
-anything, find out why a result is low (next section).
+**The compressor matters a lot, and a bad one invalidates the run.** Two runs
+with `--compressor 'claude -p'` on another machine kept only 12-15/28 at block
+size 2 and 0-1/28 from 8 up. They are not a measurement of the prompt: 52 of
+65 responses had several lines, and the line taken as the summary was often a
+side remark ("I left out ...", a connector notice, a leaked date from the
+local context). `claude -p` is a full agent that loads the local context, so
+it is not a bare model. Use `eval/compressors/anthropic_api.py` (below) or
+check the "example summaries" before trusting any number (next section).
 
 ## When the numbers look wrong
 
