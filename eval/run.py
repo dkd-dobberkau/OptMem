@@ -252,7 +252,7 @@ def evaluate(d, n, spec, widths):
     return res
 
 
-SUPERSEDED = re.compile(r"nicht|statt|vorher|früher|bisher|ursprünglich|alt\b|verschoben|not |was |instead", re.I)
+SUPERSEDED = re.compile(r"nicht|statt|vorher|früher|bisher|ursprünglich|alt\b|verschoben|not |was |instead|→|->|>", re.I)
 
 
 def old_state(text, old):

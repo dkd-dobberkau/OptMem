@@ -73,6 +73,30 @@ compressor clearly helps, mostly in the middle levels. All 5 trivia notes were
 dropped at every level, and the correction survived. Nothing in the fixture
 reaches the 256:1 range the README plans for large logs.
 
+### Prompt A/B with the API compressor
+
+`eval/compressors/anthropic_api.py`, `claude-sonnet-5-5`, 2026-10-06, two runs
+per variant. Facts kept out of 28 (run 1 / run 2):
+
+| block | `current` | `strict` |
+|---|---|---|
+| 2 | 28 / 28 | 28 / 27 |
+| 4 | 26 / 26 | 26 / 26 |
+| 8 | 22 / 21 | 26 / 27 |
+| 16 | 16 / 18 | 19 / 20 |
+| 32 | 9 / 11 | 11 / 14 |
+| 64 | 4 / 6 | 8 / 10 |
+| wake, 16 lines | 19 / 20 | 23 / 25 |
+| wake, 8 lines | 14 / 15 | 16 / 21 |
+
+Identical runs differ by up to 2 facts, so differences of 1-3 are noise. At
+blocks 8, 16 and 64 the two variants do not overlap: `strict` keeps about 3-5
+more details. The price: `strict` drops less trivia at the low levels (all 5
+noise notes still present at blocks 2 and 4, 2-3 at block 8, none from 32 up;
+`current` drops nearly all of them from block 8) and writes telegraphic
+summaries ("Mollie>PayPal", "Konten 41.000→31.700"). Both keep the correction
+at the root. Two runs, one fixture, one model: a lead, not a result.
+
 **The compressor matters a lot, and a bad one invalidates the run.** Two runs
 with `--compressor 'claude -p'` on another machine kept only 12-15/28 at block
 size 2 and 0-1/28 from 8 up. They are not a measurement of the prompt: 52 of
